@@ -59,12 +59,10 @@ function App() {
     })
 
     const ticketBoughtHandler = (buyer, occasionId, seat) => {
-      console.log(buyer,occasionId,seat);
-      window.location.reload();
+      console.log(buyer,occasionId.toString(),seat.toString());
     }
 
     ticketBuyer.on("TicketBought", ticketBoughtHandler);
-
   }
 
   useEffect(() => {
