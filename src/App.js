@@ -58,6 +58,13 @@ function App() {
       setAccount(account)
     })
 
+    const ticketBoughtHandler = (buyer, occasionId, seat) => {
+      console.log(buyer,occasionId,seat);
+      window.location.reload();
+    }
+
+    ticketBuyer.on("TicketBought", ticketBoughtHandler);
+
   }
 
   useEffect(() => {
