@@ -28,7 +28,8 @@ contract TicketBuyer is ERC721, Ownable {
     mapping (address => uint256) ownedSum;
 
     event TicketBought(address buyer, uint256 occasionId, uint256 seat);
-    event ShowNewOwner(address host);
+    event EventAdded();
+    event Withdrawal(address indexed account, uint256 amount);
 
     modifier checkHost() {
         (bool success, bytes memory data) = hostContractAddress.call(abi.encodeWithSignature("checkHost(address)", msg.sender));
@@ -52,7 +53,6 @@ contract TicketBuyer is ERC721, Ownable {
     ) public checkHost{
 
         totalOccasions++;
-
         occasions[totalOccasions] = Occasion(
             totalOccasions,
             _name,
@@ -64,6 +64,7 @@ contract TicketBuyer is ERC721, Ownable {
             _location,
             msg.sender
         );
+        emit EventAdded();
     }
 
     function mint(uint256 _id, uint256 _seat) public payable {
@@ -99,6 +100,7 @@ contract TicketBuyer is ERC721, Ownable {
 
     function withdraw() public checkHost {
         (bool success, ) = owner().call{value: ownedSum[msg.sender]}("");
+        emit Withdrawal(msg.sender, ownedSum[msg.sender]);
         ownedSum[msg.sender] = 0;
         require(success);
     }
@@ -106,7 +108,6 @@ contract TicketBuyer is ERC721, Ownable {
     function changeHostContract(address newHostContract) public onlyOwner {
         require(newHostContract != address(0));
         hostContractAddress = newHostContract;
-        emit ShowNewOwner(hostContractAddress);
     }
     
     function getTotalCost(uint256 costPerTicket, uint256 numTickets) public pure returns (uint256){

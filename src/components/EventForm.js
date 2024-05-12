@@ -30,7 +30,14 @@ const EventForm = ({ticketBuyer, provider, onClose }) => {
         formData.time,
         formData.location,
       );
-      onClose(); // Close the form after successful submission
+      onClose();
+      const eventAddedHandler = () => {
+        window.location.reload();
+      };
+      ticketBuyer.on("EventAdded", eventAddedHandler);
+      return () => {
+        ticketBuyer.off("EventAdded", eventAddedHandler);
+      };
     } catch (error) {
       console.error('Error listing event:', error);
     }
