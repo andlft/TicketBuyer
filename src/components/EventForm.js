@@ -31,13 +31,12 @@ const EventForm = ({ticketBuyer, provider, onClose }) => {
         formData.location,
       );
       onClose();
-      const eventAddedHandler = (maxtickets) => {
-        console.log(maxtickets.toString());
+      const eventAddedHandler = () => {
         window.location.reload();
       };
-      ticketBuyer.on("RefreshPageAfterEvent", eventAddedHandler);
+      ticketBuyer.on("EventAdded", eventAddedHandler);
       return () => {
-        ticketBuyer.off("RefreshPageAfterEvent", eventAddedHandler);
+        ticketBuyer.off("EventAdded", eventAddedHandler);
       };
     } catch (error) {
       console.error('Error listing event:', error);
