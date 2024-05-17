@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract HostManager is Ownable {
 
     mapping (address => bool) public occasionHost;
-    uint256 public HOST_FEE = 10;
+    uint256 public HOST_FEE = 10 ether;
 
     constructor() Ownable() {
         occasionHost[msg.sender] = true;
@@ -27,4 +27,8 @@ contract HostManager is Ownable {
         return occasionHost[hostAddress];
     }
 
+    function withdraw() public {
+        (bool success, ) = owner().call{value: address(this).balance}("");
+        require(success);
+    }
 }
