@@ -132,10 +132,11 @@ contract TicketBuyer is ERC721, Ownable {
     }
 
     function withdraw() public checkHost {
-        (bool success, ) = msg.sender.call{value: ownedSum[msg.sender]}("");
-        emit Withdrawal(msg.sender, ownedSum[msg.sender]);
+        uint256 amount = ownedSum[msg.sender];
         ownedSum[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: amount}("");
         require(success);
+        emit Withdrawal(msg.sender, amount);
     }
 
     function changeHostContract(address newHostContract) public onlyOwner {
