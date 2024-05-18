@@ -20,11 +20,19 @@ async function main() {
   const hostManager = await HostManager.deploy()
   await hostManager.deployed()
 
+  // Deploy Discount contract
+  const DiscountContract = await ethers.getContractFactory("Discount")
+  const discountContract = await DiscountContract.deploy("Discount", "DT", ticketBuyer.address)
+  await discountContract.deployed()
+
   // Set HostManager contract in TicketBuyer
   await ticketBuyer.connect(deployer).changeHostContract(hostManager.address);
+  await ticketBuyer.connect(deployer).changeDiscountContract(discountContract.address);
 
   console.log(`Deployed TicketBuyer Contract at: ${ticketBuyer.address}\n`)
   console.log(`Deployed HostManager Contract at: ${hostManager.address}\n`)
+  console.log(`Deployed Discount Contract at: ${discountContract.address}\n`)
+
   console.log(`Deployer: ${deployer.address}\n`)
 
   // List mock events

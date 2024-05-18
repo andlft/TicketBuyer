@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ethers } from 'ethers'
 
 // Import Components
 import Seat from './Seat'
@@ -6,7 +7,7 @@ import Seat from './Seat'
 // Import Assets
 import close from '../assets/close.svg'
 
-const SeatChart = ({ occasion, ticketBuyer, provider, setToggle }) => {
+const SeatChart = ({ occasion, ticketBuyer, discountContract, provider, setToggle, account }) => {
   const [seatsTaken, setSeatsTaken] = useState(false)
   const [hasSold, setHasSold] = useState(false)
 
@@ -19,8 +20,20 @@ const SeatChart = ({ occasion, ticketBuyer, provider, setToggle }) => {
     setHasSold(false)
 
     const signer = await provider.getSigner()
-    const transaction = await ticketBuyer.connect(signer).mint(occasion.id, _seat, { value: occasion.cost })
-    await transaction.wait()
+    const tBalance = await discountContract.balanceOf(account);
+
+    if(tBalance >= 3.0 && occasion.cost.gt(ethers.utils.parseEther('2.0'))){
+      var occasionCostwDiscount = ethers.BigNumber.from(occasion.cost.sub(ethers.utils.parseEther('1.0')));
+      if (occasionCostwDiscount.lt(ethers.BigNumber.from(0))){
+        occasionCostwDiscount = ethers.BigNumber.from(0)
+      }
+      const transaction = await ticketBuyer.connect(signer).mintWithDiscount(occasion.id, _seat, { value: occasionCostwDiscount })
+      await transaction.wait()
+    }
+    else {
+      const transaction = await ticketBuyer.connect(signer).mint(occasion.id, _seat, { value: occasion.cost })
+      await transaction.wait()
+    }
 
     setHasSold(true)
   }
@@ -32,7 +45,10 @@ const SeatChart = ({ occasion, ticketBuyer, provider, setToggle }) => {
   return (
     <div className="occasion">
       <div className="occasion__seating">
-        <h1>{occasion.name} Seating Map</h1>
+        <h1>{occasion.name} Seating Map 
+        <div>{occasion.cost.gt(ethers.utils.parseEther('2.0')) && (
+        <div>Discount 1 ETH for every 4th ticket*</div>
+      )}</div> </h1>
 
         <button onClick={() => setToggle(false)} className="occasion__close">
           <img src={close} alt="Close" />

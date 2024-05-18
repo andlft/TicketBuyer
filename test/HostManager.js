@@ -4,7 +4,7 @@ const { ethers } = require("hardhat")
 describe("HostManager", () => {
 
     let deployer, host1, host2;
-    const FEE = 10;
+    const FEE = ethers.utils.parseUnits("10", "ether");
 
     beforeEach(async () => {
         [deployer, host1, host2] = await ethers.getSigners()
