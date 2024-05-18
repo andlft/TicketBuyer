@@ -8,6 +8,7 @@ contract TicketBuyer is ERC721, Ownable {
     uint256 public totalOccasions;
     uint256 public totalSupply;
     address public hostContractAddress;
+    address public discountContractAddress;
     
     struct Occasion {
         uint256 id;
@@ -87,6 +88,38 @@ contract TicketBuyer is ERC721, Ownable {
 
         ownedSum[occasions[_id].host] += msg.value;
         _safeMint(msg.sender, totalSupply);
+        (bool success, ) = discountContractAddress.call(abi.encodeWithSignature("deposit(address)", msg.sender));
+        require(success);
+        emit TicketBought(msg.sender, _id, _seat);
+    }
+
+    function mintWithDiscount(uint256 _id, uint256 _seat) public payable {
+
+        require(_id != 0);
+        require(_id <= totalOccasions);
+        require(msg.value >= 2 ether, "msg.value less than 0");
+        require(msg.value >= occasions[_id].cost - 1 ether, "msg.value too low!");
+        require(seatTaken[_id][_seat] == address(0));
+        require(_seat <= occasions[_id].maxTickets);
+
+        (bool success, bytes memory data) = discountContractAddress.call(abi.encodeWithSignature("balanceOf(address)", msg.sender));
+        require(success);
+        require(abi.decode(data, (uint256)) >= 3.0);
+
+        occasions[_id].tickets -= 1;
+
+        hasBought[_id][msg.sender] = true;
+
+        seatTaken[_id][_seat] = msg.sender;
+
+        seatsTaken[_id].push(_seat);
+
+        totalSupply++;
+
+        ownedSum[occasions[_id].host] += msg.value;
+        _safeMint(msg.sender, totalSupply);
+        (bool success2, ) = discountContractAddress.call(abi.encodeWithSignature("deleteTokenForAccount(address)", msg.sender));
+        require(success2);
         emit TicketBought(msg.sender, _id, _seat);
     }
 
@@ -99,10 +132,11 @@ contract TicketBuyer is ERC721, Ownable {
     }
 
     function withdraw() public checkHost {
-        (bool success, ) = msg.sender.call{value: ownedSum[msg.sender]}("");
-        emit Withdrawal(msg.sender, ownedSum[msg.sender]);
+        uint256 amount = ownedSum[msg.sender];
         ownedSum[msg.sender] = 0;
+        (bool success, ) = msg.sender.call{value: amount}("");
         require(success);
+        emit Withdrawal(msg.sender, amount);
     }
 
     function changeHostContract(address newHostContract) public onlyOwner {
@@ -110,6 +144,11 @@ contract TicketBuyer is ERC721, Ownable {
         hostContractAddress = newHostContract;
     }
     
+    function changeDiscountContract(address newDiscountContract) public onlyOwner {
+        require(newDiscountContract != address(0));
+        discountContractAddress = newDiscountContract;
+    }
+
     function getTotalCost(uint256 costPerTicket, uint256 numTickets) public pure returns (uint256){
         require(costPerTicket > 0, "Invalid price");
         require(numTickets > 0, "Invalid number");

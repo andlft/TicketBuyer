@@ -10,6 +10,7 @@ import SeatChart from './components/SeatChart'
 // ABIs
 import TicketBuyer from './abis/TicketBuyer.json'
 import HostManager from './abis/HostManager.json'
+import DiscountABI from './abis/Discount.json'
 
 // Config
 import config from './config.json'
@@ -19,7 +20,7 @@ function App() {
   const [account, setAccount] = useState(null)
   const [ticketbuyer, setTicketBuyer] = useState(null)
   const [hostmanager, setHostManager] = useState(null)
-  const [deployer, setDeployer] = useState(null)
+  const [discountcontract, setDiscoutContract] = useState(null)
   const [occasions, setOccasions] = useState([])
   const [occasion, setOccasion] = useState({})
   const [toggle, setToggle] = useState(false)
@@ -39,8 +40,9 @@ function App() {
     const hostManager = new ethers.Contract(hostManagerAddress, HostManager, provider);
     setHostManager(hostManager)
 
-    const deployer = await ticketBuyer.owner()
-    setDeployer(deployer)
+    const DiscountAddress = config[network.chainId].Discount.address
+    const discountContract = new ethers.Contract(DiscountAddress, DiscountABI, provider);
+    setDiscoutContract(discountContract)
 
     const totalOccasions = await ticketBuyer.totalOccasions()
     
@@ -162,8 +164,10 @@ function App() {
         <SeatChart
           occasion={occasion}
           ticketBuyer={ticketbuyer}
+          discountContract={discountcontract}
           provider={provider}
           setToggle={setToggle}
+          account = {account}
         />
       )}
 
